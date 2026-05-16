@@ -1,318 +1,380 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>ML Predictor App</title>
-
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        :root {
-            --bg:       #0a0c10;
-            --surface:  #111318;
-            --surface2: #181b22;
-            --border:   #23272f;
-            --accent:   #00e5a0;
-            --accent2:  #0077ff;
-            --text:     #e8eaf0;
-            --muted:    #5a5f72;
-            --danger:   #ff4d6a;
-        }
-
-        body {
-            margin: 0;
-            font-family: 'Sora', sans-serif;
-            background: var(--bg);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* Ambient grid background */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px);
-            background-size: 48px 48px;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* Glowing orb */
-        body::after {
-            content: '';
-            position: fixed;
-            width: 600px;
-            height: 600px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(0,119,255,0.12) 0%, transparent 70%);
-            top: -150px;
-            right: -150px;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .container {
-            position: relative;
-            z-index: 1;
-            width: 95%;
-            max-width: 560px;
-            padding: 20px 0 40px;
-            animation: fadeUp 0.7s cubic-bezier(.16,1,.3,1) both;
-        }
-
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(28px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Top label */
-        .top-label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 32px;
-            animation: fadeUp 0.6s cubic-bezier(.16,1,.3,1) 0.1s both;
-        }
-
-        .top-label .dot {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: var(--accent);
-            box-shadow: 0 0 12px var(--accent);
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50%       { opacity: 0.4; }
-        }
-
-        .top-label span {
-            font-family: 'Space Mono', monospace;
-            font-size: 11px;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: var(--muted);
-        }
-
-        h1 {
-            font-size: clamp(22px, 5vw, 32px);
-            font-weight: 700;
-            color: var(--text);
-            letter-spacing: -0.02em;
-            line-height: 1.15;
-            margin-bottom: 8px;
-            animation: fadeUp 0.6s cubic-bezier(.16,1,.3,1) 0.15s both;
-        }
-
-        h1 span {
-            background: linear-gradient(90deg, var(--accent), var(--accent2));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .subtitle {
-            font-size: 13px;
-            color: var(--muted);
-            margin-bottom: 36px;
-            animation: fadeUp 0.6s cubic-bezier(.16,1,.3,1) 0.2s both;
-        }
-
-        /* Cards */
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 28px;
-            margin-bottom: 16px;
-            position: relative;
-            overflow: hidden;
-            animation: fadeUp 0.6s cubic-bezier(.16,1,.3,1) 0.25s both;
-        }
-
-        .card:nth-child(2) { animation-delay: 0.32s; }
-
-        /* Card accent line top */
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, var(--accent), var(--accent2), transparent);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .card:hover::before { opacity: 1; }
-
-        .card h2 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 12px;
-            font-family: 'Space Mono', monospace;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: var(--muted);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .card h2::before {
-            content: '';
-            display: inline-block;
-            width: 14px; height: 1px;
-            background: var(--accent);
-        }
-
-        label {
-            display: block;
-            margin: 0 0 8px;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            color: var(--muted);
-        }
-
-        input[type="number"] {
-            width: 100%;
-            padding: 14px 16px;
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 15px;
-            font-family: 'Space Mono', monospace;
-            color: var(--text);
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            -moz-appearance: textfield;
-        }
-
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
-
-        input[type="number"]:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(0,229,160,0.12);
-        }
-
-        input[type="number"]::placeholder { color: var(--muted); }
-
-        button {
-            margin-top: 20px;
-            padding: 14px;
-            width: 100%;
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-family: 'Space Mono', monospace;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            background: linear-gradient(135deg, var(--accent), #00b87a);
-            color: #021a10;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-
-        button::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: rgba(255,255,255,0);
-            transition: background 0.2s;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 28px rgba(0,229,160,0.35);
-        }
-
-        button:hover::after { background: rgba(255,255,255,0.08); }
-
-        button:active { transform: translateY(0); box-shadow: none; }
-
-        .output-box {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 18px 20px;
-            font-family: 'Space Mono', monospace;
-            font-size: 16px;
-            color: var(--accent);
-            min-height: 54px;
-            letter-spacing: 0.04em;
-            transition: border-color 0.3s;
-        }
-
-        .output-box:not(:empty) {
-            border-color: rgba(0,229,160,0.3);
-            box-shadow: 0 0 20px rgba(0,229,160,0.07);
-        }
-
-        .footer {
-            text-align: center;
-            font-size: 12px;
-            font-family: 'Space Mono', monospace;
-            color: var(--muted);
-            margin-top: 24px;
-            letter-spacing: 0.06em;
-            animation: fadeUp 0.6s cubic-bezier(.16,1,.3,1) 0.45s both;
-        }
-    </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ML Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0c10;--surf:#111318;--surf2:#181b22;--bdr:#23272f;--acc:#00e5a0;--acc2:#0077ff;--txt:#e8eaf0;--muted:#5a5f72;--red:#ff4d6a}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,160,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,160,.03) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 24px;gap:0}
+.brand{display:flex;align-items:center;gap:8px;margin-right:28px;padding:14px 0;flex-shrink:0}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 10px var(--acc);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.brand-name{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;letter-spacing:.04em}
+.tabs{display:flex;gap:2px;overflow-x:auto}
+.tab{padding:10px 16px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:pointer;border:none;background:transparent;border-radius:8px;white-space:nowrap;transition:all .2s;position:relative}
+.tab:hover{color:var(--txt);background:rgba(255,255,255,.04)}
+.tab.active{color:var(--acc);background:rgba(0,229,160,.08)}
+.tab.active::after{content:'';position:absolute;bottom:-1px;left:16px;right:16px;height:2px;background:var(--acc);border-radius:2px 2px 0 0}
+.page{display:none;position:relative;z-index:1}
+.page.on{display:block}
+.inner{max-width:800px;margin:0 auto;padding:40px 24px 80px}
+@keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.anim{animation:up .45s cubic-bezier(.16,1,.3,1) both}
+.ph{margin-bottom:32px}
+.ptag{display:inline-flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.ptag::before{content:'';width:12px;height:1px;background:var(--acc)}
+.ptitle{font-size:clamp(20px,4vw,28px);font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.ptitle span{background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.psub{font-size:13px;color:var(--muted);margin-top:5px}
+.card{background:var(--surf);border:1px solid var(--bdr);border-radius:16px;padding:26px;margin-bottom:16px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--acc),var(--acc2),transparent);opacity:0;transition:opacity .3s}
+.card:hover::before{opacity:1}
+.clabel{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.clabel::before{content:'';width:12px;height:1px;background:var(--acc)}
+label{display:block;margin:0 0 7px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+input[type=number]{width:100%;padding:13px 15px;background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;font-size:15px;font-family:'Space Mono',monospace;color:var(--txt);outline:none;transition:border-color .2s,box-shadow .2s;-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+input[type=number]:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,229,160,.12)}
+.pbtn{margin-top:18px;padding:13px;width:100%;border:none;border-radius:10px;font-size:13px;font-family:'Space Mono',monospace;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:linear-gradient(135deg,var(--acc),#00b87a);color:#021a10;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.pbtn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,229,160,.3)}
+.pbtn:active{transform:translateY(0);box-shadow:none}
+.outbox{background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;padding:17px 19px;font-family:'Space Mono',monospace;font-size:15px;color:var(--acc);min-height:52px;letter-spacing:.04em}
+.acc-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);border-radius:10px;padding:10px 16px;margin-top:14px;font-family:'Space Mono',monospace;font-size:13px;color:var(--acc)}
+.acc-badge strong{font-size:18px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:18px}
+.sbox{background:var(--surf2);border:1px solid var(--bdr);border-radius:12px;padding:16px}
+.sval{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:var(--acc);margin-bottom:4px}
+.slbl{font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.twrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;font-family:'Space Mono',monospace}
+thead th{padding:11px 15px;text-align:left;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--bdr);background:var(--surf2)}
+tbody tr{border-bottom:1px solid rgba(35,39,47,.5);transition:background .15s}
+tbody tr:hover{background:rgba(0,229,160,.04)}
+tbody td{padding:10px 15px;color:var(--txt)}
+tbody td:first-child{color:var(--muted)}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+.bg{background:rgba(0,229,160,.12);color:var(--acc)}
+.bb{background:rgba(0,119,255,.15);color:#4da6ff}
+.br{background:rgba(255,77,106,.12);color:var(--red)}
+.ctabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.ctab{padding:7px 14px;border-radius:8px;font-size:11px;font-family:'Space Mono',monospace;letter-spacing:.07em;text-transform:uppercase;border:1px solid var(--bdr);color:var(--muted);background:transparent;cursor:pointer;transition:all .2s}
+.ctab.active,.ctab:hover{border-color:var(--acc);color:var(--acc);background:rgba(0,229,160,.08)}
+.chwrap{position:relative;width:100%;height:300px}
+.legend{margin-top:12px;display:flex;gap:16px;font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:6px}
+.ldot{width:10px;height:10px;border-radius:50%;background:rgba(255,77,106,.75);display:inline-block}
+.lline{width:22px;height:2px;background:var(--acc);display:inline-block}
+.rsec{margin-bottom:28px}
+.rsec h3{font-size:11px;font-family:'Space Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin-bottom:12px;padding-bottom:9px;border-bottom:1px solid var(--bdr)}
+.rsec p{font-size:13px;color:rgba(232,234,240,.75);line-height:1.75;margin-bottom:8px}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.mcard{background:var(--surf2);border:1px solid var(--bdr);border-radius:12px;padding:18px 16px;position:relative;overflow:hidden}
+.mcard::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+.mval{font-family:'Space Mono',monospace;font-size:24px;font-weight:700;color:var(--acc);margin-bottom:3px}
+.mlbl{font-size:10px;color:var(--muted);letter-spacing:.05em}
+.code{background:#0d0f14;border:1px solid var(--bdr);border-radius:10px;padding:18px 20px;font-family:'Space Mono',monospace;font-size:12px;line-height:1.85;color:#8892a4;overflow-x:auto}
+.kw{color:#c792ea}.fn{color:#82aaff}.st{color:var(--acc)}.cm{color:#546e7a}.nm{color:#f78c6c}
+.finding{display:flex;align-items:flex-start;gap:12px;padding:13px 15px;background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;margin-bottom:9px;font-size:13px;color:rgba(232,234,240,.8);line-height:1.6}
+.fdot{width:6px;height:6px;border-radius:50%;background:var(--acc);flex-shrink:0;margin-top:6px}
+.footer{text-align:center;font-size:11px;font-family:'Space Mono',monospace;color:var(--muted);margin-top:10px;letter-spacing:.06em}
+</style>
 </head>
 <body>
 
-<div class="container">
+<nav>
+  <div class="brand"><div class="dot"></div><span class="brand-name">ML · Studio</span></div>
+  <div class="tabs">
+    <button class="tab active" onclick="go('predict',this)">Predictor</button>
+    <button class="tab" onclick="go('dataset',this)">Dataset</button>
+    <button class="tab" onclick="go('viz',this)">Visualization</button>
+    <button class="tab" onclick="go('report',this)">Report</button>
+  </div>
+</nav>
 
-    <div class="top-label">
-        <div class="dot"></div>
-        <span>Model · Active</span>
+<!-- PREDICTOR -->
+<div class="page on anim" id="page-predict">
+  <div class="inner" style="max-width:540px">
+    <div class="ph">
+      <div class="ptag">Live Inference</div>
+      <div class="ptitle">Insurance Premium<br><span>Predictor</span></div>
+      <div class="psub">Enter policyholder age to estimate annual premium.</div>
     </div>
-
-    <h1>Machine Learning<br><span>Predictor</span></h1>
-    <p class="subtitle">Simple Linear Regression Model. Enter input features to run inference.</p>
-
-    <!-- Input Section -->
     <div class="card">
-        <h2>Input Features</h2>
-
-        <!-- CHANGE action="/predict" to your backend route -->
-        <form action="/predict" method="post">
-            <label>Experience</label>
-            <input type="number" step="any" name="experience" placeholder="e.g. 5.0" required>
-
-            <button type="submit">Run Prediction →</button>
-        </form>
+      <div class="clabel">Input Features</div>
+      <form action="/predict" method="post">
+        <label>Age (years)</label>
+        <input type="number" step="any" name="experience" placeholder="e.g. 35" required>
+        <button type="submit" class="pbtn">Run Prediction &rarr;</button>
+      </form>
+      <div class="acc-badge"><span>Model Accuracy</span><strong>97.49%</strong><span style="color:var(--muted);font-size:11px">R&sup2; = 0.9749</span></div>
     </div>
-
-    <!-- Output Section -->
     <div class="card">
-        <h2>Prediction Output</h2>
-        <div class="output-box">
-            <!-- Backend should pass prediction here -->
-            {{ prediction }}
-        </div>
+      <div class="clabel">Prediction Output</div>
+      <div class="outbox">{{ prediction }}</div>
     </div>
-
-    <div class="footer">
-        Built with ❤️ for ML Model Deployment
-    </div>
-
+    <div class="footer">Built with &hearts; for ML Model Deployment</div>
+  </div>
 </div>
 
+<!-- DATASET -->
+<div class="page" id="page-dataset">
+  <div class="inner">
+    <div class="ph anim">
+      <div class="ptag">Explore Data</div>
+      <div class="ptitle">Dataset <span>Overview</span></div>
+      <div class="psub">1,000 insurance policyholder records &mdash; Age vs Premium (&curren; thousands).</div>
+    </div>
+    <div class="sgrid">
+      <div class="sbox anim" style="animation-delay:.05s"><div class="sval">1,000</div><div class="slbl">Total Records</div></div>
+      <div class="sbox anim" style="animation-delay:.1s"><div class="sval">18&ndash;70</div><div class="slbl">Age Range</div></div>
+      <div class="sbox anim" style="animation-delay:.15s"><div class="sval">44.4</div><div class="slbl">Mean Age</div></div>
+      <div class="sbox anim" style="animation-delay:.2s"><div class="sval">&#8377;32.2K</div><div class="slbl">Mean Premium</div></div>
+      <div class="sbox anim" style="animation-delay:.25s"><div class="sval">2</div><div class="slbl">Features</div></div>
+    </div>
+    <div class="card anim" style="animation-delay:.3s;padding:0;overflow:hidden">
+      <div style="padding:18px 22px 13px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between">
+        <div class="clabel" style="margin:0">Sample Records</div>
+        <span class="badge bg">Showing 12 of 1000</span>
+      </div>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>#</th><th>Age</th><th>Premium (&#8377;K)</th><th>Split</th><th>Group</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>56</td><td>39.60</td><td><span class="badge bg">Train</span></td><td><span class="badge bb">Middle</span></td></tr>
+            <tr><td>2</td><td>69</td><td>44.64</td><td><span class="badge bg">Train</span></td><td><span class="badge bg">Senior</span></td></tr>
+            <tr><td>3</td><td>46</td><td>34.54</td><td><span class="badge bg">Train</span></td><td><span class="badge bb">Middle</span></td></tr>
+            <tr><td>4</td><td>32</td><td>24.44</td><td><span class="badge bb">Test</span></td><td><span class="badge bb">Middle</span></td></tr>
+            <tr><td>5</td><td>60</td><td>43.56</td><td><span class="badge bg">Train</span></td><td><span class="badge bg">Senior</span></td></tr>
+            <tr><td>6</td><td>25</td><td>23.00</td><td><span class="badge bb">Test</span></td><td><span class="badge br">Young</span></td></tr>
+            <tr><td>7</td><td>38</td><td>29.80</td><td><span class="badge bg">Train</span></td><td><span class="badge bb">Middle</span></td></tr>
+            <tr><td>8</td><td>56</td><td>36.43</td><td><span class="badge bb">Test</span></td><td><span class="badge bb">Middle</span></td></tr>
+            <tr><td>9</td><td>36</td><td>28.94</td><td><span class="badge bg">Train</span></td><td><span class="badge bb">Middle</span></td></tr>
+            <tr><td>10</td><td>40</td><td>31.30</td><td><span class="badge bg">Train</span></td><td><span class="badge bb">Middle</span></td></tr>
+            <tr><td>11</td><td>28</td><td>21.66</td><td><span class="badge bb">Test</span></td><td><span class="badge br">Young</span></td></tr>
+            <tr><td>12</td><td>41</td><td>31.09</td><td><span class="badge bg">Train</span></td><td><span class="badge bb">Middle</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card anim" style="animation-delay:.38s">
+      <div class="clabel">Column Info</div>
+      <div class="finding"><div class="fdot"></div><div><strong style="color:var(--txt)">Age</strong> &mdash; Independent variable (X). Integer 18&ndash;70. Policyholder's age in years.</div></div>
+      <div class="finding"><div class="fdot"></div><div><strong style="color:var(--txt)">Premium</strong> &mdash; Dependent variable (Y). Float in &#8377; thousands. This is the target to predict.</div></div>
+      <div class="finding"><div class="fdot"></div><div><strong style="color:var(--txt)">Split</strong> &mdash; 67% training (&asymp;667 rows) / 33% test (&asymp;333 rows) with random_state=0.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- VISUALIZATION -->
+<div class="page" id="page-viz">
+  <div class="inner">
+    <div class="ph anim">
+      <div class="ptag">Charts</div>
+      <div class="ptitle">Data <span>Visualization</span></div>
+      <div class="psub">Interactive scatter plots with regression line &mdash; training and test sets.</div>
+    </div>
+    <div class="card anim" style="animation-delay:.1s">
+      <div class="clabel">Scatter &mdash; Age vs Premium</div>
+      <div class="ctabs">
+        <button class="ctab active" onclick="switchChart('train',this)">Training Set</button>
+        <button class="ctab" onclick="switchChart('test',this)">Test Set</button>
+        <button class="ctab" onclick="switchChart('both',this)">Combined</button>
+      </div>
+      <div class="chwrap"><canvas id="sc"></canvas></div>
+      <div class="legend">
+        <span><span class="ldot"></span>Actual data points</span>
+        <span><span class="lline"></span>Regression line</span>
+      </div>
+    </div>
+    <div class="card anim" style="animation-delay:.2s">
+      <div class="clabel">Average Premium by Age Group</div>
+      <div class="chwrap" style="height:260px"><canvas id="bc"></canvas></div>
+    </div>
+    <div class="card anim" style="animation-delay:.28s">
+      <div class="clabel">Regression Summary</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;font-size:13px">
+        <div style="padding:14px;background:var(--surf2);border-radius:10px;border:1px solid var(--bdr)">
+          <div style="color:var(--muted);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">Equation</div>
+          <div style="font-family:'Space Mono',monospace;color:var(--acc);font-size:13px">Premium = 0.462 &times; Age + 11.2</div>
+        </div>
+        <div style="padding:14px;background:var(--surf2);border-radius:10px;border:1px solid var(--bdr)">
+          <div style="color:var(--muted);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">Interpretation</div>
+          <div style="color:rgba(232,234,240,.8);font-size:13px">Each year of age &rarr; ~&#8377;462 increase in premium</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT -->
+<div class="page" id="page-report">
+  <div class="inner">
+    <div class="ph anim">
+      <div class="ptag">Project Report</div>
+      <div class="ptitle">Model <span>Report</span></div>
+      <div class="psub">Insurance Premium Prediction &middot; Simple Linear Regression &middot; Google Colab &middot; 2026</div>
+    </div>
+    <div class="card anim" style="animation-delay:.1s">
+      <div class="rsec">
+        <h3>01 &middot; Objective</h3>
+        <p>Predict insurance premium amounts (in &#8377; thousands) from policyholder age using Simple Linear Regression. Trained and evaluated in Google Colab using Python&rsquo;s scikit-learn on 1,000 records.</p>
+      </div>
+      <div class="rsec">
+        <h3>02 &middot; Model Performance</h3>
+        <div class="mgrid">
+          <div class="mcard"><div class="mval">97.49%</div><div class="mlbl">Model Accuracy</div></div>
+          <div class="mcard"><div class="mval">0.9749</div><div class="mlbl">R&sup2; Score</div></div>
+          <div class="mcard"><div class="mval">67 / 33</div><div class="mlbl">Train / Test Split</div></div>
+          <div class="mcard"><div class="mval">~&#8377;20K</div><div class="mlbl">Predicted (Age 20)</div></div>
+        </div>
+        <p>R&sup2; = 0.9749 means 97.49% of variance in premiums is explained by age alone &mdash; an exceptional result for a single-feature model.</p>
+      </div>
+      <div class="rsec">
+        <h3>03 &middot; Algorithm</h3>
+        <p>Simple Linear Regression fits <strong style="color:var(--acc);font-family:'Space Mono',monospace">Premium = m &times; Age + b</strong>, minimising Mean Squared Error. Slope m &asymp; 0.462 means each additional year of age adds ~&#8377;462 to the estimated premium.</p>
+      </div>
+      <div class="rsec">
+        <h3>04 &middot; Code Snapshot</h3>
+        <div class="code">
+<span class="kw">from</span> sklearn.linear_model <span class="kw">import</span> LinearRegression<br>
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split<br>
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> r2_score<br><br>
+X_train, X_test, Y_train, Y_test = <span class="fn">train_test_split</span>(<br>
+&nbsp;&nbsp;X, Y, test_size=<span class="nm">1/3</span>, random_state=<span class="nm">0</span>)<br><br>
+regressor = <span class="fn">LinearRegression</span>()<br>
+regressor.<span class="fn">fit</span>(X_train, Y_train)<br><br>
+Y_pred = regressor.<span class="fn">predict</span>(X_test)<br>
+r2 = <span class="fn">r2_score</span>(Y_test, Y_pred)<br>
+<span class="fn">print</span>(<span class="st">f"Accuracy: {r2*100:.2f}%"</span>)<br>
+<span class="cm"># Output: Model Accuracy (R&sup2; Score): 97.49%</span>
+        </div>
+      </div>
+      <div class="rsec">
+        <h3>05 &middot; Key Findings</h3>
+        <div class="finding"><div class="fdot"></div><div>Strong positive linear relationship between age and insurance premium across all 1,000 samples.</div></div>
+        <div class="finding"><div class="fdot"></div><div>Model generalises well &mdash; training and test scatter plots show nearly identical regression line alignment.</div></div>
+        <div class="finding"><div class="fdot"></div><div>Predicted premium for age 20 &asymp; &#8377;20,070, consistent with observed range (&#8377;14.35K&ndash;&#8377;49.49K).</div></div>
+        <div class="finding"><div class="fdot"></div><div>Future scope: add features (BMI, smoking, region) and explore polynomial or multiple regression.</div></div>
+      </div>
+      <div class="rsec" style="margin-bottom:0">
+        <h3>06 &middot; Suggested Improvements</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+          <div class="finding" style="flex-direction:column;gap:6px">
+            <div style="color:var(--acc);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em">FEATURE EXPANSION</div>
+            <div>Add BMI, smoking status, number of dependents, and region for a richer model.</div>
+          </div>
+          <div class="finding" style="flex-direction:column;gap:6px">
+            <div style="color:var(--acc);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em">ALGORITHM UPGRADE</div>
+            <div>Try Multiple Linear Regression, Ridge, or Random Forest for improved accuracy.</div>
+          </div>
+          <div class="finding" style="flex-direction:column;gap:6px">
+            <div style="color:var(--acc);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em">DEPLOYMENT</div>
+            <div>Connect this UI to a Flask/FastAPI backend to serve live predictions from the trained model.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">Built with &hearts; for ML Model Deployment</div>
+  </div>
+</div>
+
+<script>
+function go(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('on');
+  btn.classList.add('active');
+  document.querySelectorAll('#page-' + id + ' .anim').forEach(el => {
+    el.style.animation = 'none'; el.offsetHeight; el.style.animation = '';
+  });
+  if (id === 'viz') initCharts();
+}
+
+const m = 0.4615, b = 11.2;
+const reg = a => +(m * a + b).toFixed(2);
+
+const trainPts = [
+  {x:18,y:19.2},{x:20,y:20.4},{x:22,y:21.1},{x:25,y:23.0},{x:28,y:21.7},{x:28,y:20.7},
+  {x:30,y:24.1},{x:32,y:24.4},{x:35,y:26.8},{x:36,y:28.9},{x:38,y:29.8},{x:40,y:31.3},
+  {x:41,y:31.1},{x:41,y:27.4},{x:43,y:32.1},{x:45,y:33.5},{x:46,y:34.5},{x:48,y:35.1},
+  {x:50,y:35.8},{x:52,y:36.9},{x:53,y:37.0},{x:55,y:38.4},{x:56,y:39.6},{x:56,y:36.4},
+  {x:58,y:40.2},{x:60,y:43.6},{x:62,y:41.8},{x:64,y:42.3},{x:67,y:43.9},{x:69,y:44.6},
+  {x:70,y:44.0},{x:19,y:19.8},{x:24,y:22.3},{x:33,y:25.1},{x:42,y:31.5},{x:51,y:36.0},
+  {x:59,y:41.1},{x:65,y:43.2},{x:27,y:20.6},{x:37,y:28.2},{x:47,y:34.0},{x:57,y:35.9}
+];
+const testPts = [
+  {x:18,y:20.1},{x:21,y:21.5},{x:26,y:22.8},{x:29,y:22.4},{x:31,y:24.9},{x:34,y:26.1},
+  {x:39,y:28.8},{x:44,y:33.2},{x:49,y:34.9},{x:54,y:37.4},{x:61,y:42.1},{x:66,y:43.5},
+  {x:68,y:44.2},{x:70,y:47.1},{x:23,y:22.0},{x:43,y:32.5},{x:53,y:38.1},{x:63,y:41.5}
+];
+const linePts = Array.from({length:13}, (_, i) => ({x: 18 + i * 4, y: reg(18 + i * 4)}));
+
+const tOpts = {
+  backgroundColor:'#111318', borderColor:'#23272f', borderWidth:1,
+  titleColor:'#00e5a0', bodyColor:'#e8eaf0',
+  titleFont:{family:'Space Mono'}, bodyFont:{family:'Space Mono'}
+};
+const scaleStyle = (label) => ({
+  grid:{color:'rgba(35,39,47,.9)'},
+  ticks:{color:'#5a5f72', font:{family:'Space Mono', size:11}},
+  title:{display:true, text:label, color:'#5a5f72', font:{family:'Space Mono', size:11}}
+});
+
+let scObj = null, bcObj = null, inited = false;
+
+function initCharts() {
+  if (inited) return;
+  inited = true;
+
+  scObj = new Chart(document.getElementById('sc').getContext('2d'), {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {data: trainPts, backgroundColor:'rgba(255,77,106,.65)', pointRadius:5, pointHoverRadius:7, order:2},
+        {data: linePts, type:'line', borderColor:'#00e5a0', borderWidth:2, pointRadius:0, fill:false, tension:0, order:1}
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{...tOpts, callbacks:{label:c=>`Age: ${c.parsed.x}  |  Premium: \u20B9${c.parsed.y}K`}}},
+      scales:{x: scaleStyle('Age (years)'), y: scaleStyle('Premium (\u20B9K)')}
+    }
+  });
+
+  bcObj = new Chart(document.getElementById('bc').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['18-29','30-39','40-49','50-59','60-70'],
+      datasets: [{
+        data: [21.4, 27.6, 33.1, 38.2, 43.5],
+        backgroundColor: ['rgba(0,229,160,.75)','rgba(0,229,160,.68)','rgba(0,119,255,.72)','rgba(0,119,255,.65)','rgba(0,229,160,.6)'],
+        borderRadius: 6, borderSkipped: false
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{...tOpts, callbacks:{label:c=>`Avg: \u20B9${c.parsed.y}K`}}},
+      scales:{x:{...scaleStyle('Age Group'), grid:{display:false}}, y: scaleStyle('Avg Premium (\u20B9K)')}
+    }
+  });
+}
+
+function switchChart(type, btn) {
+  document.querySelectorAll('.ctab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  if (!scObj) return;
+  const pts = type === 'train' ? trainPts : type === 'test' ? testPts : [...trainPts, ...testPts];
+  const col = type === 'test' ? 'rgba(0,119,255,.65)' : 'rgba(255,77,106,.65)';
+  scObj.data.datasets[0].data = pts;
+  scObj.data.datasets[0].backgroundColor = col;
+  scObj.update();
+}
+</script>
 </body>
 </html>
